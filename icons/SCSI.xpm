@@ -1,0 +1,34 @@
+/* XPM */
+static char *SCSI[] = {
+/* width height num_colors chars_per_pixel */
+"    16    15       12            1",
+/* colors */
+". c None",
+"# c #404040",
+"a c #606060",
+"b c #808080",
+"c c #a0a0a0",
+"d c #aaaaaa",
+"e c #b0b0b0",
+"f c #b8b8b8",
+"g c #cfcfcf",
+"h c #dddddd",
+"i c #f0f0f0",
+"j c #ffffff",
+/* pixels */
+"................",
+"......cc........",
+".....cjic.......",
+"....cjggic......",
+"...cjg#bgic.....",
+"..cjg#bhbgic....",
+".cjg#bcccbgiccc.",
+"cjg#bcjjiiiiiigf",
+"cigbhchcbbigaaab",
+".cigb..cjig#bbbd",
+"..cigbcjig#bc...",
+"...cigbig#bc....",
+"....cigg#bc.....",
+".....ci#bc......",
+"......cec......."
+};

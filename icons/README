@@ -1,0 +1,50 @@
+Gentooicons  Oct 17 1999
+========================
+
+General
+-------
+All icons were hand-crafted by Johan Hanson <johan@tiq.com>, originally
+for the file manager Gentoo by Emil Brink.
+
+The latest version of these icons can be found at
+"http://www.obsession.se/johan/gentooicons.html".
+Gentoo can be found at "http://www.obsession.se/gentoo/".
+
+I would be happy to recieve any comments and/or icons that you may have
+based on my work. A version in size 32x32 is *not* under way, but I have
+made a few images that you can get if you mail me.
+
+If you think you can do better than me, don't hesitate to send your
+artwork to me and maybe it will be included in the next release.
+I'm actually not an artist, just a programmer that believes he has a
+sense for style. =)
+
+Try my GTK theme "Xenophilia". It is plain, grey, and very nice.
+It is implemented as a theme engine, thus it is faster than pixmap
+themes. You can find it at http://www.obsession.se/johan/gtk.html
+
+Further distribution
+--------------------
+If you want to redistribute icons from this package, please consider
+distributing the whole package. (including this README)
+Also, I would be happy to recieve an email about your redistribution.
+Those things are not required, but they strenghten my ego. =)
+
+Acknowledgements
+----------------
+A lot of the motives have been taken from:
+GNOME icons by Tigert (Tuomas Kuosmanen), MarcoIcons by Marco van 
+Hylckama Vlieg, MagicWB by Martin Huttenloher, BeOS by Be Inc., Atari
+control panel by Atari corp.(RIP), ACDSee icons by ACD Systems, Ltd.,
+Copilot icon by Alan Chavis, GNUstep 3D icon by Andrea Mistrali.
+Some of these have in turn borrowed images from other collections.
+
+License
+-------
+Copyright (C) 1998 Johan Hanson.
+
+The images are free software. You may redistribute and/or modify
+them under the terms of the GNU General Public License, version
+2 or later. See the file [../]COPYING for details.
+
+Logos and trademarks belong to their respective organisations.
