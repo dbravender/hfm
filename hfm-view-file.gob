@@ -1,0 +1,173 @@
+%alltop{
+#include <gnome.h>
+#include <sys/stat.h>
+#include "hfm-window.h"
+#include "hfm-view-mime.h"
+%}
+
+%{
+#define UNIT_COUNT 4
+gchar* unit[4] = { "bytes", "k","MB","GB" };
+%}
+
+class Hfm:View:File from Gtk:HBox {
+  public gchar *file destroywith g_free;
+  public gchar *fullpath destroywith g_free;
+  public GtkWidget *clist; /*destroywith gtk_widget_destroy;*/
+  public GtkWidget *scrollwindow; /*destroywith gtk_widget_destroy;*/
+  public GtkWidget *vbox; /*destroywith gtk_widget_destroy;*/
+  public GtkWidget *bonobo_preview; /*destroywith gtk_widget_destroy;*/
+  public GList *buttons destroywith g_list_free;
+  public GList *commands destroywith g_list_free;
+  public HfmWindow *parent;
+  
+  private void selected(GtkWidget *src, gint row, gint column, GdkEventButton *event, gpointer user_data) {
+    HfmViewFile *self = (HfmViewFile *)user_data;
+ 
+    if(row == 2) {
+      hfm_window_add_view_after(self->parent, GTK_WIDGET(self), hfm_view_mime_new(self->parent, self->fullpath));
+    }
+  } 
+
+  private void action_selected(GtkWidget *src, gpointer user_data) {
+    printf("Executing %s\n", (char *)user_data);
+  
+    system((gchar *)user_data);
+  }
+
+  private void add_action_buttons(self) {
+    GtkWidget *button;
+    gchar *mime_type, *actions;
+    gchar **key_pair, **action_pair, *temp_label;
+    char *run_command = NULL, *command_location = NULL;
+    int i = 0;
+  
+    mime_type = g_strdup(gnome_mime_type_of_file(self->fullpath));
+    actions = g_strdup(gnome_mime_get_value(mime_type, "hfm-action"));
+  
+    if(actions) {
+      key_pair = g_strsplit(actions, ",", 0);
+    
+      for(i = 0; key_pair[i] != NULL; i++) {
+        action_pair = g_strsplit(key_pair[i], "=", 0);
+        if(action_pair[0] && action_pair[1]) {
+          temp_label = g_strdup_printf("%s (%s)", g_strstrip(action_pair[0]), g_strstrip(action_pair[1]));
+          
+          button = gtk_button_new_with_label(temp_label);
+          
+          g_free(temp_label);
+        
+          command_location = index(action_pair[1], '%');
+          if(command_location != NULL)
+            command_location[0] = '\0';
+  
+          run_command = g_strdup_printf("%s \"%s\" &", g_strstrip(action_pair[1]), self->fullpath);
+  
+          gtk_signal_connect(GTK_OBJECT(button), "clicked", GTK_SIGNAL_FUNC(action_selected), (char *)run_command);
+          gtk_widget_set_usize(GTK_WIDGET(button), 100, 25);
+          self->buttons = g_list_append(self->buttons, (gpointer)button);
+          self->commands = g_list_append(self->commands, (gpointer)run_command);
+          gtk_box_pack_start(GTK_BOX(self->vbox), button, FALSE, FALSE, 0);
+          gtk_widget_show(button);
+        }
+        g_strfreev(action_pair);
+      }
+    
+      g_strfreev(key_pair);
+      g_free(actions);
+    }
+  
+    g_free(mime_type);
+  }
+
+  private void populate(self, gchar *fullpath, gchar *file) {
+    gchar *insert[] = {NULL, NULL, NULL};
+    gchar *bonobo_moniker = NULL;
+    gfloat size = 0;
+    int count = 0;
+    struct stat *stat_entry = NULL;
+    
+    if(self->fullpath)
+      g_free(self->fullpath);
+      
+    self->fullpath = g_strdup(fullpath);
+    
+    if(self->file)
+      g_free(self->file);
+      
+    self->file = g_strdup(file);
+    
+    gtk_clist_set_column_title(GTK_CLIST(self->clist), 0, "info");
+    gtk_clist_set_column_title(GTK_CLIST(self->clist), 1, "");
+    
+    add_action_buttons(self);
+    
+    bonobo_moniker = g_strdup_printf("file:%s", self->fullpath);
+    
+    if(self->bonobo_preview)
+      gtk_widget_destroy(self->bonobo_preview);
+    
+    self->bonobo_preview = bonobo_widget_new_control(bonobo_moniker, BONOBO_OBJREF(self->parent->uic));
+    if(!self->bonobo_preview)
+      self->bonobo_preview = gtk_label_new("No preview available.");
+    
+    g_free(bonobo_moniker);
+    
+    gtk_container_add(GTK_CONTAINER(self->vbox), self->bonobo_preview);
+        
+    stat_entry = g_malloc(sizeof(struct stat));
+    
+    stat(self->fullpath, stat_entry);
+
+    for ( size = (gfloat)stat_entry->st_size; size >= 1024 && count < UNIT_COUNT ; size /= 1024)
+      count++;
+    
+    g_free(stat_entry);
+    
+    insert[0] = "filename";
+    insert[1] = self->file;
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+
+    insert[0] = "size";
+    insert[1] = g_strdup_printf("%.01f %s", size, unit[count]);
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+
+    g_free(insert[1]);
+    
+    insert[0] = "mime-type";
+    insert[1] = g_strdup(gnome_mime_type_of_file(self->fullpath));
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+
+    g_free(insert[1]);
+  }
+  
+  public GtkWidget *new(HfmWindow *parent, gchar *fullpath, gchar *file) {
+    gchar *insert[] = {NULL, NULL, NULL};
+    HfmViewFile *self = GET_NEW;  
+  
+    self->parent = parent;
+  
+    self->clist = gtk_clist_new_with_titles(2, insert);
+    
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 0, 60);
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 1, 160); 
+  
+    self->scrollwindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (self->scrollwindow), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+  
+    self->vbox = gtk_vbox_new(FALSE, 0);
+  
+    gtk_signal_connect(GTK_OBJECT(self->clist), "select_row", GTK_SIGNAL_FUNC(selected), (gpointer)self);
+    /*gtk_signal_connect(GTK_OBJECT(self->clist), "button_press_event", GTK_SIGNAL_FUNC(file_clicked), (gpointer)self);*/
+  
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(self->scrollwindow), self->vbox);
+    gtk_container_add(GTK_CONTAINER(self->vbox), self->clist);
+    gtk_container_add(GTK_CONTAINER(self), self->scrollwindow);
+  
+    populate(self, fullpath, file);
+
+    gtk_widget_show_all((GtkWidget *)self);
+  
+    return (GtkWidget *)self;
+  }
+}

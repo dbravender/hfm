@@ -1,0 +1,111 @@
+%alltop{
+#include "hfm-window.h"
+#include "hfm-view-file.h"
+#include "icon-hash.h"
+#include <gnome.h>
+#include <dirent.h>
+%}
+
+class Hfm:View:Directory from Gtk:HBox {
+  public char *selected destroywith g_free;
+  public char *directory destroywith g_free;
+  public char *fullpath destroywith g_free;
+  public GtkWidget *clist; /*destroywith gtk_widget_destroy;*/
+  public GtkWidget *scrollwindow; /*destroywith gtk_widget_destroy;*/
+  public HfmWindow *parent;
+  
+  private void selected(GtkWidget *src, gint row, gint column, GdkEventButton *event, gpointer user_data) {
+    HfmViewDirectory *self = (HfmViewDirectory *)user_data;
+    GtkWidget *next = NULL;
+    gchar *fullpath;
+    gchar *file;
+    
+    gtk_clist_get_text(GTK_CLIST(self->clist), row, 1, &file);  
+  
+    if(self->selected)
+      g_free(self->selected);
+     
+    self->selected = g_strdup(file);
+    
+    fullpath = g_strdup_printf("%s/%s", self->fullpath, self->selected);
+    
+    if(is_directory(fullpath))
+      next = hfm_view_directory_new(self->parent, fullpath, self->selected);
+    else
+      next = hfm_view_file_new(self->parent, fullpath, self->selected);
+    
+    hfm_window_add_view_after(self->parent, GTK_WIDGET(self), next);
+  
+    g_free(fullpath);
+  } 
+  
+  private void populate(self, gchar *fullpath, gchar *directory) {
+    DIR *cur_dir = NULL;
+    struct dirent *dir_entry = NULL;
+    gchar *insert[] = {NULL, NULL, NULL};
+    GList *directory_list = NULL, *p = NULL;
+    int row = 0;
+    struct icon_hash *icon = NULL;
+  
+    if(self->fullpath)
+      g_free(self->fullpath);
+    
+    self->fullpath = g_strdup(fullpath);
+    
+    if(self->directory)
+      g_free(self->directory);
+    
+    self->directory = g_strdup(directory);
+    
+    gtk_clist_set_column_title(GTK_CLIST(self->clist), 1, self->directory);
+  
+    cur_dir = opendir(self->fullpath);
+  
+    if(cur_dir) {   
+      while((dir_entry = readdir(cur_dir))) {
+        if(dir_entry->d_name[0] == '.') 
+          continue;
+        directory_list = g_list_insert_sorted(directory_list, g_strdup(dir_entry->d_name), (GCompareFunc)g_strncasecmp);
+      }
+    
+      for(p = directory_list; p != NULL; p = g_list_next(p)) {
+        insert[1] = (gchar *)p->data;
+        gtk_clist_append(GTK_CLIST(self->clist), insert);
+        icon = get_icon_for_file(self->fullpath, p->data);
+        gtk_clist_set_pixmap(GTK_CLIST(self->clist), row, 0, icon->pixmap, icon->mask);
+        g_free(p->data);
+        row++;
+      }
+    
+      g_list_free(directory_list);
+      
+      closedir(cur_dir);
+    }
+  }
+  
+  public GtkWidget *new(HfmWindow *parent, gchar *fullpath, gchar *directory) {
+    HfmViewDirectory *self = GET_NEW;
+    gchar *insert[] = {NULL, NULL, NULL};
+    
+    self->parent = parent;
+    
+    self->clist = gtk_clist_new_with_titles(2, insert);
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 0, 15);
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 1, 205);
+    
+    self->scrollwindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(self->scrollwindow), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    
+    gtk_container_add(GTK_CONTAINER(self->scrollwindow), self->clist);
+    gtk_container_add(GTK_CONTAINER(self), self->scrollwindow);
+    
+    gtk_widget_show_all(GTK_WIDGET(self));
+    
+    gtk_signal_connect(GTK_OBJECT(self->clist), "select_row", GTK_SIGNAL_FUNC(selected), (gpointer)self);
+    /*gtk_signal_connect(GTK_OBJECT(self->clist), "button_press_event", GTK_SIGNAL_FUNC(clicked), (gpointer)self);*/
+  
+    populate(self, fullpath, directory);
+    
+    return (GtkWidget *)self;
+  }
+}

@@ -1,0 +1,67 @@
+%alltop{
+#include <gnome.h>
+#include "hfm-window.h"
+%}
+
+class Hfm:View:Mime from Gtk:HBox {
+  public gchar *mime_type destroywith g_free;
+  public gchar *fullpath destroywith g_free;
+  public GtkWidget *clist; /*destroywith gtk_widget_destroy;*/
+  public GtkWidget *scrollwindow; /*destroywith gtk_widget_destroy;*/
+  public HfmWindow *parent;
+
+  private void populate(self, gchar *fullpath) {
+    GList *mime_keys, *p;
+    gchar *insert[] = {NULL, NULL, NULL};
+  
+    if(self->fullpath)
+      g_free(self->fullpath);
+    
+    self->fullpath = g_strdup((gchar *)fullpath);
+    
+    if(self->mime_type)
+      g_free(self->mime_type);
+    
+    self->mime_type = g_strdup((gchar *)gnome_mime_type(fullpath));
+
+    gtk_clist_set_column_title(GTK_CLIST(self->clist), 1, self->mime_type);
+  
+    mime_keys = (GList *)gnome_mime_get_keys(self->mime_type);
+
+    for(p = mime_keys; p != NULL; p = g_list_next(p)) {
+      insert[0] = g_strdup((gchar *)p->data);
+      insert[1] = g_strdup((gchar *)gnome_mime_get_value(self->mime_type, insert[0]));
+      gtk_clist_append(GTK_CLIST(self->clist), insert); 
+  
+      g_free(insert[0]); insert[0] = NULL;
+      g_free(insert[1]); insert[1] = NULL;
+    }
+  }
+  
+  public GtkWidget *new(HfmWindow *parent, gchar *fullpath) {
+    gchar *insert[] = {NULL, NULL, NULL};
+    HfmViewMime *self = GET_NEW;  
+  
+    self->parent = parent;
+  
+    self->clist = gtk_clist_new_with_titles(2, insert);
+    
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 0, 160);
+    gtk_clist_set_column_width(GTK_CLIST(self->clist), 1, 160);
+  
+    self->scrollwindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (self->scrollwindow), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+  
+    /*gtk_signal_connect(GTK_OBJECT(self->clist), "select_row", GTK_SIGNAL_FUNC(file_selected), (gpointer)self);
+    gtk_signal_connect(GTK_OBJECT(self->clist), "button_press_event", GTK_SIGNAL_FUNC(file_clicked), (gpointer)self);*/
+  
+    populate(self, fullpath);
+    
+    gtk_container_add(GTK_CONTAINER(self->scrollwindow), self->clist);
+    gtk_container_add(GTK_CONTAINER(self), self->scrollwindow);
+    
+    gtk_widget_show_all((GtkWidget *)self);
+  
+    return (GtkWidget *)self;
+  }
+}

@@ -1,0 +1,40 @@
+audio/x-mp3:
+	hfm-action=enqueue=xmms -e %f, play=xmms -p %f
+  hfm-icon=icons/mp3.xpm
+
+application/zip:
+  hfm-icon=icons/Package.xpm
+
+application/x-tar:
+  hfm-icon=icons/Package.xpm
+  
+image/*:
+  hfm-action=view=eog %f, edit=gimp %f
+  hfm-icon=icons/Image.xpm
+  
+image/xpm:
+  hfm-icon=icons/xpm2.xpm
+
+image/x-png:
+  hfm-icon=icons/png2.xpm
+
+image/png:
+  hfm-icon=icons/png2.xpm
+
+image/gif:
+  hfm-icon=icons/gif2.xpm
+
+image/jpeg:
+  hfm-icon=icons/jpeg2.xpm
+
+application/x-object-file:
+  hfm-icon=icons/o.xpm
+  
+text/x-c:
+  hfm-icon=icons/c.xpm
+ 
+text/*:
+  hfm-action=edit=nedit %f
+
+text/html:
+  hfm-icon=icons/html.xpm

@@ -1,0 +1,59 @@
+hfm 0.1
+
+copyright (C) 2001 by Dan Bravender
+email: dan_bravender@yahoo.com
+project home page: todd.wc-m.com/~dbravender/hfm
+
+hfm is my personal attempt to create a useful and pretty alternative
+file manager for X based on the GNOME libraries (gtk+/glib/bonobo).  
+
+features
+--------
+1. bonobo component preview of file contents (text, image, etc.)
+2. several launcher buttons for different types of actions that can be
+   performed on files based on their mime type
+
+inspiration / petty theft
+-------------------------
+As I was making hfm, I was frequently looking at code written by Geert
+Bevin from his fm file manager (http://thunderstorms.org/fm).  I also 
+borrowed the icons from the Gentoo file manager 
+(http://www.obsession.se/gentoo/).
+
+build
+-----
+
+To build hfm, you will need recent GNOME libraries and their headers 
+and the Gtk Object Builder (GOB).  (Debian users can simply run the 
+command 'apt-get install libgnome-dev libbonobo-dev gob'.)  
+
+* Untar the package 'tar zvxf hfm.tar.gz'.
+* 'cd hfm'.
+* Then 'make'.
+
+icons and launcher customization
+--------------------------------
+In order to have hfm recognize which icons to display for any given 
+file you have to set up an hfm.keys file in your ~/.gnome/mime-info/ 
+directory,  An example hfm.keys file comes in the tarball.  The
+syntax for adding icons is hfm-icon=[icon file].  To add launchers the
+syntax is hfm-action=[label]=[command][, [label]=[command]]... For the
+mime type image/* the hfm-action might be as follows:
+
+image/*:
+	hfm-action=view=eog %f, edit=gimp %f
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA

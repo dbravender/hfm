@@ -1,0 +1,84 @@
+%alltop{
+#include <bonobo.h>
+#include <gnome.h>
+#include "icon-hash.h"
+
+int window_count;
+%}
+
+class Hfm:Window from Bonobo:Window {
+  public BonoboUIContainer *uic destroywith bonobo_object_unref;
+  public GtkWidget *scrollwindow;
+  public GtkWidget *vbox;
+  public GtkWidget *hbox;
+  public GList *views destroywith g_list_free; /*{
+    GList *p; 
+    for(p = VAR; p != NULL; p = p->next)
+      gtk_widget_destroy((GtkWidget *)p->data);
+    g_list_free(VAR);
+  };*/
+  
+  override(Gtk:Object) void destroy(Gtk:Object *self (check null type)) {
+    window_count--;
+  
+    if(window_count <= 0) {
+      g_hash_table_destroy(icon_table);
+      gtk_main_quit();
+    }
+    
+    PARENT_HANDLER(self);
+  }
+  
+  public void add_view(self, GtkWidget *widget) {
+    self->views = g_list_append(self->views, widget);
+    
+    gtk_container_add(GTK_CONTAINER(self->hbox), widget);
+    gtk_widget_show_all(widget);
+  }
+  
+  public void add_view_after(self, GtkWidget *current, GtkWidget *new_widget) {
+    GList *next, *p;
+
+    next = g_list_find(self->views, current);
+
+    if(next) {
+      next = next->next; /*We want to delete _after_ current*/
+      while(next != NULL) {
+        p = next;
+        next = next->next;
+        
+        gtk_widget_destroy(GTK_WIDGET(p->data));
+        self->views = g_list_remove(self->views, p->data);
+      } 
+    }
+    
+    add_view(self, new_widget);
+  }
+  
+  public GtkWidget *new(void) {
+    HfmWindow *self = GET_NEW;
+    
+    if(!icon_table)
+      icon_table = g_hash_table_new(g_str_hash, g_str_equal);
+    
+    window_count++;
+    
+    gtk_widget_set_usize(GTK_WIDGET(self), 780, 300);
+    
+    self->uic = bonobo_ui_container_new();
+    bonobo_ui_container_set_win(self->uic, BONOBO_WINDOW(self));
+    
+    bonobo_window_set_name(BONOBO_WINDOW(self), "hfm: /");
+     
+    self->hbox = gtk_hbox_new(TRUE, 0);
+    self->scrollwindow = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (self->scrollwindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(self->scrollwindow), self->hbox);
+    bonobo_window_set_contents(BONOBO_WINDOW(self), self->scrollwindow);
+
+    gtk_widget_show_all((GtkWidget *)self);
+
+    return (GtkWidget *)self;
+  }
+}
