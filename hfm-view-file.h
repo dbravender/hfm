@@ -3,6 +3,7 @@
 
 
 #include <gnome.h>
+#include <time.h>
 #include <sys/stat.h>
 #include "hfm-window.h"
 #include "hfm-view-mime.h"
@@ -44,6 +45,7 @@ struct _HfmViewFile {
 	/*< public >*/
 	gchar * file;
 	gchar * fullpath;
+	GtkWidget * file_button;
 	GtkWidget * clist;
 	GtkWidget * scrollwindow;
 	GtkWidget * vbox;

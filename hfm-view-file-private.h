@@ -3,12 +3,13 @@
 
 
 #include <gnome.h>
+#include <time.h>
 #include <sys/stat.h>
 #include "hfm-window.h"
 #include "hfm-view-mime.h"
 
 #line 1 "hfm-view-file.gob"
-#line 12 "hfm-view-file-private.h"
+#line 13 "hfm-view-file-private.h"
 #ifndef __HFM_VIEW_FILE_PRIVATE_H__
 #define __HFM_VIEW_FILE_PRIVATE_H__
 

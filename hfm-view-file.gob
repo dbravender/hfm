@@ -1,5 +1,6 @@
 %alltop{
 #include <gnome.h>
+#include <time.h>
 #include <sys/stat.h>
 #include "hfm-window.h"
 #include "hfm-view-mime.h"
@@ -13,6 +14,7 @@ gchar* unit[4] = { "bytes", "k","MB","GB" };
 class Hfm:View:File from Gtk:HBox {
   public gchar *file destroywith g_free;
   public gchar *fullpath destroywith g_free;
+  public GtkWidget *file_button; /*destroywith gtk_widget_destroy;*/
   public GtkWidget *clist; /*destroywith gtk_widget_destroy;*/
   public GtkWidget *scrollwindow; /*destroywith gtk_widget_destroy;*/
   public GtkWidget *vbox; /*destroywith gtk_widget_destroy;*/
@@ -64,7 +66,7 @@ class Hfm:View:File from Gtk:HBox {
           run_command = g_strdup_printf("%s \"%s\" &", g_strstrip(action_pair[1]), self->fullpath);
   
           gtk_signal_connect(GTK_OBJECT(button), "clicked", GTK_SIGNAL_FUNC(action_selected), (char *)run_command);
-          gtk_widget_set_usize(GTK_WIDGET(button), 100, 25);
+          gtk_widget_set_usize(GTK_WIDGET(button), 100, 22);
           self->buttons = g_list_append(self->buttons, (gpointer)button);
           self->commands = g_list_append(self->commands, (gpointer)run_command);
           gtk_box_pack_start(GTK_BOX(self->vbox), button, FALSE, FALSE, 0);
@@ -97,9 +99,6 @@ class Hfm:View:File from Gtk:HBox {
       
     self->file = g_strdup(file);
     
-    gtk_clist_set_column_title(GTK_CLIST(self->clist), 0, "info");
-    gtk_clist_set_column_title(GTK_CLIST(self->clist), 1, "");
-    
     add_action_buttons(self);
     
     bonobo_moniker = g_strdup_printf("file:%s", self->fullpath);
@@ -122,12 +121,6 @@ class Hfm:View:File from Gtk:HBox {
     for ( size = (gfloat)stat_entry->st_size; size >= 1024 && count < UNIT_COUNT ; size /= 1024)
       count++;
     
-    g_free(stat_entry);
-    
-    insert[0] = "filename";
-    insert[1] = self->file;
-    gtk_clist_append(GTK_CLIST(self->clist), insert);
-
     insert[0] = "size";
     insert[1] = g_strdup_printf("%.01f %s", size, unit[count]);
     gtk_clist_append(GTK_CLIST(self->clist), insert);
@@ -135,10 +128,22 @@ class Hfm:View:File from Gtk:HBox {
     g_free(insert[1]);
     
     insert[0] = "mime-type";
-    insert[1] = g_strdup(gnome_mime_type_of_file(self->fullpath));
+    insert[1] = (gchar *)gnome_mime_type_of_file(self->fullpath);
     gtk_clist_append(GTK_CLIST(self->clist), insert);
-
-    g_free(insert[1]);
+    
+    insert[0] = "accessed";
+    insert[1] = ctime(&stat_entry->st_atime);
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+    
+    insert[0] = "modified";
+    insert[1] = ctime(&stat_entry->st_mtime);
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+    
+    insert[0] = "changed";
+    insert[1] = ctime(&stat_entry->st_ctime);
+    gtk_clist_append(GTK_CLIST(self->clist), insert);
+  
+    g_free(stat_entry);
   }
   
   public GtkWidget *new(HfmWindow *parent, gchar *fullpath, gchar *file) {
@@ -147,7 +152,10 @@ class Hfm:View:File from Gtk:HBox {
   
     self->parent = parent;
   
-    self->clist = gtk_clist_new_with_titles(2, insert);
+    self->clist = gtk_clist_new(2);
+    
+    self->file_button = gtk_button_new_with_label(file);
+    gtk_widget_set_usize(GTK_WIDGET(self->file_button), 100, 22);
     
     gtk_clist_set_column_width(GTK_CLIST(self->clist), 0, 60);
     gtk_clist_set_column_width(GTK_CLIST(self->clist), 1, 160); 
@@ -161,7 +169,8 @@ class Hfm:View:File from Gtk:HBox {
     /*gtk_signal_connect(GTK_OBJECT(self->clist), "button_press_event", GTK_SIGNAL_FUNC(file_clicked), (gpointer)self);*/
   
     gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(self->scrollwindow), self->vbox);
-    gtk_container_add(GTK_CONTAINER(self->vbox), self->clist);
+    gtk_box_pack_start(GTK_BOX(self->vbox), self->file_button, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(self->vbox), self->clist, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(self), self->scrollwindow);
   
     populate(self, fullpath, file);
